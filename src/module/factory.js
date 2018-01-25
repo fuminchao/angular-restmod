@@ -369,7 +369,26 @@ RMModule.factory('RMModelFactory', ['$injector', '$log', 'inflector', 'RMUtils',
       $initialize: function() {
         var tmp, i, self = this;
         for(i = 0; (tmp = defaults[i]); i++) {
-          this[tmp[0]] = (typeof tmp[1] === 'function') ? tmp[1].apply(this) : tmp[1];
+          if (typeof tmp[1] === 'function') {
+            (function(n, v, ns) {
+
+              // If exists, bypass
+              if ( this.hasOwnProperty(n) ) {
+                return;
+              }
+
+              Object.defineProperty(this, n, {
+                get: function() {
+                  return ( this[ns] = this[ns] || v.apply(this) );
+                },
+                set: function(v) {
+                  return ( this[ns] = v );
+                },
+              });
+            }).call(this, tmp[0], tmp[1], Sybmol(tmp[0]));
+          } else {
+            this[tmp[0]] = tmp[1];
+          }
         }
 
         for(i = 0; (tmp = computes[i]); i++) {
